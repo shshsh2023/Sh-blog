@@ -1,4 +1,5 @@
 import ElementPlus from 'element-plus'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'element-plus/dist/index.css'
 import http from './utils/request.js'
 import common from './utils/common.js'
@@ -33,6 +34,7 @@ app.config.globalProperties.$constant = constant
 
 
 app.use(ElementPlus)
+app.use(ElementPlusIconsVue)
 app.use(vueBaberrage)
 app.use(mavonEditor)
 app.use(router)

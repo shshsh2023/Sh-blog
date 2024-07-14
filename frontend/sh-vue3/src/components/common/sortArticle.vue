@@ -148,7 +148,6 @@
 <script setup>
 
 import {getCurrentInstance, ref} from "vue";
-import {useStore} from "vuex";
 import {useRouter} from "vue-router";
 
 const img = ref('https://img.zcool.cn/community/01585d55c2ef736ac7253f36abae49.jpg?imageMogr2/auto-orient/thumbnail/1280x%3e/sharpen/0.5/quality/100')

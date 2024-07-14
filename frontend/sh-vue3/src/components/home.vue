@@ -1,5 +1,5 @@
 <template>
-<!--  <RouterLink to="/love">aaa</RouterLink>-->
+  <!--  <RouterLink to="/love">aaa</RouterLink>-->
   <div>
     <!-- el过渡动画 -->
     <transition name="el-fade-in-linear">
@@ -11,7 +11,9 @@
            class="toolbar-content myBetween">
         <!-- 网站名称 -->
         <div class="toolbar-title">
-          <h2 ><RouterLink to="/">{{ store.state.webInfo.webName }}</RouterLink></h2>
+          <h2>
+            <RouterLink to="/" style="text-decoration: none">{{ store.state.webInfo.webName }}</RouterLink>
+          </h2>
         </div>
 
         <!-- 手机导航按钮 -->
@@ -19,7 +21,9 @@
              class="toolbar-mobile-menu"
              @click="toolbarDrawer = !toolbarDrawer"
              :class="{ enter: toolbar.enter }">
-          <i class="el-icon-s-operation"></i>
+          <el-icon>
+            <Operation/>
+          </el-icon>
         </div>
 
         <!-- 导航列表 -->
@@ -278,6 +282,9 @@ import {getCurrentInstance, nextTick, onMounted, onUnmounted, ref, watch} from "
 import {useStore} from "vuex";
 import {useRoute, useRouter} from "vue-router";
 import {ElMessage} from "element-plus";
+import {Operation} from "@element-plus/icons-vue";
+import $ from 'jquery'
+
 
 const toolButton = ref(false);
 const hoverEnter = ref(false)
@@ -285,7 +292,7 @@ const mouseAnimation = ref(false)
 let isDark = false
 const scrollTop = ref(0)
 const toolbarDrawer = ref(false)
-let mobile = false
+let mobile = ref(false)
 
 const store = useStore()
 const route = useRoute()
@@ -354,11 +361,11 @@ onMounted(() => {
   getSysConfig();
   getSortInfo();
 
-  mobile = document.body.clientWidth < 1100;
+  mobile.value = document.body.clientWidth < 1100;
 
   window.addEventListener('resize', () => {
     let docWidth = document.body.clientWidth;
-    mobile = docWidth < 810;
+    mobile.value = docWidth < 810;
   })
 })
 
@@ -430,9 +437,9 @@ function getSysConfig() {
 }
 
 function buildCssPicture() {
-
   let root = document.querySelector(":root");
   let webStaticResourcePrefix = store.state.sysConfig['webStaticResourcePrefix'];
+  console.log(webStaticResourcePrefix)
   root.style.setProperty("--commentURL", "url(" + webStaticResourcePrefix + "assets/commentURL.png)");
   root.style.setProperty("--springBg", "url(" + webStaticResourcePrefix + "assets/springBg.png)");
   root.style.setProperty("--admireImage", "url(" + webStaticResourcePrefix + "assets/admireImage.jpg)");

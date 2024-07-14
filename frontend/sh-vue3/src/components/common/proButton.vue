@@ -6,27 +6,27 @@
   </div>
 </template>
 
-<script>
-  export default {
-    props: {
-      info: {
-        type: String,
-        default: "确定"
-      },
-      before: {
-        type: String
-      },
-      after: {
-        type: String
-      }
-    },
-    data() {
-      return {
-        beforeColor: {"background": this.before},
-        afterColor: {"background": this.after}
-      };
-    }
+<script setup>
+
+const props =  defineProps({
+  info: {
+    type: String,
+    default: "确定"
+  },
+  before: {
+    type: String
+  },
+  after: {
+    type: String
   }
+})
+
+
+const beforeColor = {"background": props.before}
+
+const afterColor = {"background": props.after}
+
+
 </script>
 
 <style scoped>

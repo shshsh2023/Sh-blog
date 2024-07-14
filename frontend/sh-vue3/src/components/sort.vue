@@ -4,7 +4,6 @@
     <div class="my-animation-slide-top">
       <twoPoem></twoPoem>
     </div>
-
     <div style="background: var(--background);padding-top: 40px;" class="my-animation-slide-bottom">
       <!-- 标签 -->
       <div class="sort-warp shadow-box" v-if="!common.isEmpty(sort) && !common.isEmpty(sort.labels)">
@@ -38,9 +37,10 @@
 
 <script setup>
 
-import {defineAsyncComponent, getCurrentInstance, onMounted, watch} from "vue";
+import {defineAsyncComponent, getCurrentInstance, nextTick, onMounted, ref, watch} from "vue";
 import {useStore} from "vuex";
-import {useRoute, useRouter} from "vue-router";
+import {useRoute} from "vue-router";
+import {ElMessage} from "element-plus";
 
 const twoPoem = defineAsyncComponent(() => import( "./common/twoPoem.vue"));
 const proTag = defineAsyncComponent(() => import( "./common/proTag.vue"));
@@ -49,7 +49,6 @@ const myFooter = defineAsyncComponent(() => import( "./common/myFooter.vue"));
 
 const store = useStore()
 const route = useRoute()
-const router = useRouter();
 
 const globalProperties = getCurrentInstance().appContext.config.globalProperties;
 
@@ -58,23 +57,22 @@ const http = globalProperties.$http
 const constant = globalProperties.$constant
 
 
-let sortId = route.query.sortId
-
-let labelId = route.query.labelId
-let sort = null
-let pagination = {
+let sortId = ref(route.query.sortId)
+let labelId = ref(route.query.labelId)
+let sort = ref(null)
+let pagination = ref({
   current: 1,
   size: 10,
   total: 0,
   searchKey: "",
   sortId: route.query.sortId,
   labelId: route.query.labelId
-}
-let articles = []
+})
+let articles = ref([])
 
 
 watch(route, () => {
-  pagination = {
+  pagination.value = {
     current: 1,
     size: 10,
     total: 0,
@@ -82,9 +80,9 @@ watch(route, () => {
     sortId: route.query.sortId,
     labelId: route.query.labelId
   };
-  articles.splice(0, articles.length);
-  sortId = route.query.sortId;
-  labelId = route.query.labelId;
+  articles.value.splice(0, articles.value.length);
+  sortId.value = route.query.sortId;
+  labelId.value = route.query.labelId;
   getSort();
   getArticles();
 })
@@ -96,7 +94,7 @@ onMounted(() => {
 
 
 const pageArticles = () => {
-  pagination.current = pagination.current + 1;
+  pagination.value.current = pagination.value.current + 1;
   getArticles();
 }
 
@@ -104,16 +102,17 @@ const getSort = () => {
   let sortInfo = store.state.sortInfo;
   if (!common.isEmpty(sortInfo)) {
     let sortArray = sortInfo.filter(f => {
-      return f.id === parseInt(sortId);
+      return f.id === parseInt(sortId.value);
     });
     if (!common.isEmpty(sortArray)) {
-      sort = sortArray[0];
+      sort.value = sortArray[0];
     }
   }
 }
+
 const listArticle = (label) => {
-  labelId = label.id;
-  pagination = {
+  labelId.value = label.id;
+  pagination.value = {
     current: 1,
     size: 10,
     total: 0,
@@ -121,8 +120,8 @@ const listArticle = (label) => {
     sortId: route.query.sortId,
     labelId: label.id
   };
-  articles.splice(0, articles.length);
-  this.$nextTick(() => {
+  articles.value.splice(0, articles.value.length);
+  nextTick(() => {
     getArticles();
   });
 }
@@ -131,18 +130,14 @@ const getArticles = () => {
   http.post(constant.baseURL + "/article/listArticle", pagination)
       .then((res) => {
         if (!common.isEmpty(res.data)) {
-          articles = articles.concat(res.data.records);
-          pagination.total = res.data.total;
+          articles.value = articles.value.concat(res.data.records);
+          pagination.value.total = res.data.total;
         }
       })
       .catch((error) => {
-        this.$message({
-          message: error.message,
-          type: "error"
-        });
+        ElMessage.error(error.message)
       });
 }
-
 </script>
 
 <style scoped>

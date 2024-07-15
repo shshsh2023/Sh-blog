@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "less": "^4.2.0"
+  },
+  "dependencies": {
+    "danmaku-vue": "^1.0.2",
+    "uuid": "^10.0.0",
+    "vue3-danmaku": "^1.6.0"
+  }
+}

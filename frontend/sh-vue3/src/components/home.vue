@@ -298,6 +298,9 @@ const store = useStore()
 const route = useRoute()
 const router = useRouter();
 
+const bg_href = new URL("@/assets/imgs/bg.jpg", import.meta.url).href;
+
+const img = 'https://img.zcool.cn/community/01585d55c2ef736ac7253f36abae49.jpg?imageMogr2/auto-orient/thumbnail/1280x%3e/sharpen/0.5/quality/100'
 const globalProperties = getCurrentInstance().appContext.config.globalProperties;
 
 const common = globalProperties.$common
@@ -380,7 +383,7 @@ function smallMenu(data) {
 
 
 function smallMenuLogout() {
-  this.logout();
+  logout();
   toolbarDrawer.value = false;
 }
 
@@ -399,7 +402,7 @@ function goAdmin() {
 
 function logout() {
   http.get(constant.baseURL + "/user/logout")
-      .then((res) => {
+      .then(() => {
       })
       .catch((error) => {
         ElMessage.error(error.message)
@@ -439,7 +442,6 @@ function getSysConfig() {
 function buildCssPicture() {
   let root = document.querySelector(":root");
   let webStaticResourcePrefix = store.state.sysConfig['webStaticResourcePrefix'];
-  console.log(webStaticResourcePrefix)
   root.style.setProperty("--commentURL", "url(" + webStaticResourcePrefix + "assets/commentURL.png)");
   root.style.setProperty("--springBg", "url(" + webStaticResourcePrefix + "assets/springBg.png)");
   root.style.setProperty("--admireImage", "url(" + webStaticResourcePrefix + "assets/admireImage.jpg)");
@@ -449,7 +451,8 @@ function buildCssPicture() {
   root.style.setProperty("--backgroundPicture", "url(" + webStaticResourcePrefix + "assets/backgroundPicture.jpg)");
   root.style.setProperty("--toolbar", "url(" + webStaticResourcePrefix + "assets/toolbar.jpg)");
   root.style.setProperty("--love", "url(" + webStaticResourcePrefix + "assets/love.jpg)");
-  const font = new FontFace("poetize-font", "url(" + webStaticResourcePrefix + "assets/font.woff2)");
+  const font_url = new URL("@/assets/webfont/font.ttf", import.meta.url).href;
+  const font = new FontFace("poetize-font", `url(${font_url})`);
   font.load();
   document.fonts.add(font);
 }

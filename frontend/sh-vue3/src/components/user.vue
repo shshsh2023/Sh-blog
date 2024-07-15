@@ -4,15 +4,20 @@
     <div v-if="$common.isEmpty(currentUser)"
          class="myCenter in-up-container my-animation-hideToShow">
       <!-- 背景图片 -->
+<!--      :src="$store.state.webInfo.randomCover[Math.floor(Math.random() * $store.state.webInfo.randomCover.length)]"-->
       <el-image class="my-el-image"
                 style="position: absolute"
                 v-once
                 lazy
-                :src="$store.state.webInfo.randomCover[Math.floor(Math.random() * $store.state.webInfo.randomCover.length)]"
+                :src="bg_href"
                 fit="cover">
-        <div slot="error" class="image-slot"></div>
+        <template v-slot:error>
+          <div class="image-slot"></div>
+        </template>
       </el-image>
+
       <div class="in-up" id="loginAndRegist">
+
         <div class="form-container sign-up-container">
           <div class="myCenter">
             <h1>注册</h1>
@@ -20,10 +25,11 @@
             <input v-model="password" type="password" maxlength="30" placeholder="密码">
             <input v-model="email" type="email" placeholder="邮箱">
             <input v-model="code" type="text" placeholder="验证码" disabled>
-            <a style="margin: 0" href="#" @click="changeDialog('邮箱验证码')">获取验证码</a>
+            <a style="margin: 0" @click="changeDialog('邮箱验证码')">获取验证码</a>
             <button @click="regist()">注册</button>
           </div>
         </div>
+
         <div class="form-container sign-in-container">
           <div class="myCenter">
             <h1>登录</h1>
@@ -33,6 +39,7 @@
             <button @click="login()">登录</button>
           </div>
         </div>
+
         <div class="overlay-container">
           <div class="overlay">
             <div class="overlay-panel myCenter overlay-left">
@@ -47,6 +54,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -59,12 +67,14 @@
                 lazy
                 :src="$store.state.webInfo.randomCover[Math.floor(Math.random() * $store.state.webInfo.randomCover.length)]"
                 fit="cover">
-        <div slot="error" class="image-slot"></div>
+        <template v-slot:error>
+          <div class="image-slot"></div>
+        </template>
       </el-image>
       <div class="shadow-box-mini user-info" style="display: flex">
         <div class="user-left">
           <div>
-            <el-avatar class="user-avatar" @click.native="changeDialog('修改头像')" :size="60"
+            <el-avatar class="user-avatar" @click="changeDialog('修改头像')" :size="60"
                        :src="currentUser.avatar"></el-avatar>
           </div>
           <div class="myCenter" style="margin-top: 12px">
@@ -81,9 +91,11 @@
               </div>
               <div>
                 <div v-if="!$common.isEmpty(currentUser.phoneNumber)">
-                  {{ currentUser.phoneNumber }} <span class="changeInfo" @click="changeDialog('修改手机号')">修改（功能未接入）</span>
+                  {{ currentUser.phoneNumber }} <span class="changeInfo"
+                                                      @click="changeDialog('修改手机号')">修改（功能未接入）</span>
                 </div>
-                <div v-else><span class="changeInfo" @click="changeDialog('绑定手机号')">绑定手机号（功能未接入）</span></div>
+                <div v-else><span class="changeInfo" @click="changeDialog('绑定手机号')">绑定手机号（功能未接入）</span>
+                </div>
               </div>
               <div>
                 <div v-if="!$common.isEmpty(currentUser.email)">
@@ -108,7 +120,7 @@
           </div>
           <div style="margin-top: 20px">
             <proButton :info="'提交'"
-                       @click.native="submitUserInfo()"
+                       @click="submitUserInfo()"
                        :before="$constant.before_color_2"
                        :after="$constant.after_color_2">
             </proButton>
@@ -122,7 +134,7 @@
 
 
     <el-dialog :title="dialogTitle"
-               :visible.sync="showDialog"
+               v-model="showDialog"
                width="30%"
                :before-close="clearDialog"
                :append-to-body="true"
@@ -186,13 +198,13 @@
         <div style="display: flex;margin-top: 30px" v-show="dialogTitle !== '修改头像'">
           <proButton :info="codeString"
                      v-show="dialogTitle === '修改手机号' || dialogTitle === '绑定手机号' || dialogTitle === '修改邮箱' || dialogTitle === '绑定邮箱' || dialogTitle === '找回密码' || dialogTitle === '邮箱验证码'"
-                     @click.native="getCode()"
+                     @click="getCode()"
                      :before="$constant.before_color_1"
                      :after="$constant.after_color_1"
                      style="margin-right: 20px">
           </proButton>
           <proButton :info="'提交'"
-                     @click.native="submitDialog()"
+                     @click="submitDialog()"
                      :before="$constant.before_color_2"
                      :after="$constant.after_color_2">
           </proButton>
@@ -202,662 +214,678 @@
   </div>
 </template>
 
-<script>
-  const proButton = () => import( "./common/proButton");
-  const uploadPicture = () => import( "./common/uploadPicture");
+<script setup>
+import {defineAsyncComponent, getCurrentInstance, ref} from "vue";
+import {useStore} from "vuex";
+import {ElMessage} from "element-plus";
+import {useRouter} from "vue-router";
 
-  export default {
-    components: {
-      proButton,
-      uploadPicture
-    },
-    data() {
-      return {
-        currentUser: this.$store.state.currentUser,
-        username: "",
-        account: "",
-        password: "",
-        phoneNumber: "",
-        email: "",
-        avatar: "",
-        showDialog: false,
-        code: "",
-        dialogTitle: "",
-        codeString: "验证码",
-        passwordFlag: null,
-        intervalCode: null
-      }
-    },
-    computed: {},
-    created() {
+const proButton = defineAsyncComponent(() => import( "./common/proButton.vue"));
+const uploadPicture = defineAsyncComponent(() => import( "./common/uploadPicture.vue"));
 
-    },
-    methods: {
-      addPicture(res) {
-        this.avatar = res;
-        this.submitDialog()
-      },
-      signUp() {
-        document.querySelector("#loginAndRegist").classList.add('right-panel-active');
-      },
-      signIn() {
-        document.querySelector("#loginAndRegist").classList.remove('right-panel-active');
-      },
-      login() {
-        if (this.$common.isEmpty(this.account) || this.$common.isEmpty(this.password)) {
-          this.$message({
-            message: "请输入账号或密码！",
-            type: "error"
-          });
-          return;
+const globalProperties = getCurrentInstance().appContext.config.globalProperties;
+
+const common = globalProperties.$common
+const http = globalProperties.$http
+const constant = globalProperties.$constant
+
+const store = useStore()
+const router = useRouter();
+
+const bg_href = new URL("@/assets/imgs/bg.jpg", import.meta.url).href;
+
+
+const currentUser = ref(store.state.currentUser)
+const username = ref("")
+const account = ref("")
+const password = ref("")
+const phoneNumber = ref("")
+const email = ref("")
+const avatar = ref("")
+const showDialog = ref(false)
+const code = ref("")
+const dialogTitle = ref("")
+const codeString = ref("验证码")
+const passwordFlag = ref(null)
+const intervalCode = ref(null)
+
+
+const addPicture = (res) => {
+  avatar.value = res;
+  submitDialog()
+}
+const signUp = () => {
+  document.querySelector("#loginAndRegist").classList.add('right-panel-active');
+}
+const signIn = () => {
+  document.querySelector("#loginAndRegist").classList.remove('right-panel-active');
+}
+
+const login = () => {
+  if (common.isEmpty(account) || common.isEmpty(password)) {
+    ElMessage({
+      message: "请输入账号或密码！",
+      type: "error"
+    });
+    return;
+  }
+
+  let user = {
+    account: account.value.trim(),
+    password: common.encrypt(password.value.trim())
+  };
+  console.log(user)
+  http.post(constant.baseURL + "/user/login", user, false, false)
+      .then((res) => {
+        if (!common.isEmpty(res.data)) {
+          store.commit("loadCurrentUser", res.data);
+          localStorage.setItem("userToken", res.data.accessToken);
+          account.value = "";
+          password.value = "";
+          router.push({path: '/'});
         }
+      })
+      .catch((error) => {
+        ElMessage({
+          message: error.message,
+          type: "error"
+        });
+      });
+}
 
-        let user = {
-          account: this.account.trim(),
-          password: this.$common.encrypt(this.password.trim())
-        };
+const regist = () => {
+  if (common.isEmpty(username) || common.isEmpty(password)) {
+    ElMessage({
+      message: "请输入用户名或密码！",
+      type: "error"
+    });
+    return;
+  }
 
-        this.$http.post(this.$constant.baseURL + "/user/login", user, false, false)
-          .then((res) => {
-            if (!this.$common.isEmpty(res.data)) {
-              this.$store.commit("loadCurrentUser", res.data);
-              localStorage.setItem("userToken", res.data.accessToken);
-              this.account = "";
-              this.password = "";
-              this.$router.push({path: '/'});
-            }
-          })
-          .catch((error) => {
-            this.$message({
-              message: error.message,
-              type: "error"
+  if (dialogTitle.value === "邮箱验证码" && common.isEmpty(email)) {
+    ElMessage({
+      message: "请输入邮箱！",
+      type: "error"
+    });
+    return false;
+  }
+
+  if (common.isEmpty(code)) {
+    ElMessage({
+      message: "请输入验证码！",
+      type: "error"
+    });
+    return;
+  }
+
+  if (username.value.indexOf(" ") !== -1 || password.value.indexOf(" ") !== -1) {
+    ElMessage({
+      message: "用户名或密码不能包含空格！",
+      type: "error"
+    });
+    return;
+  }
+
+  let user = {
+    username: username.value.trim(),
+    code: code.value.trim(),
+    password: common.encrypt(password.value.trim())
+  };
+
+  if (dialogTitle.value === "邮箱验证码") {
+    user.email = email.value;
+  }
+
+  http.post(constant.baseURL + "/user/regist", user)
+      .then((res) => {
+        if (!common.isEmpty(res.data)) {
+          store.commit("loadCurrentUser", res.data);
+          localStorage.setItem("userToken", res.data.accessToken);
+          username.value = "";
+          password.value = "";
+          router.push({path: '/'});
+          let userToken = common.encrypt(localStorage.getItem("userToken"));
+          window.open(constant.imBaseURL + "?userToken=" + userToken);
+        }
+      })
+      .catch((error) => {
+        ElMessage({
+          message: error.message,
+          type: "error"
+        });
+      });
+}
+
+const submitUserInfo = () => {
+  if (!checkParameters()) {
+    return;
+  }
+
+  let user = {
+    username: currentUser.value.username,
+    gender: currentUser.value.gender
+  };
+
+  if (!common.isEmpty(currentUser.value.introduction)) {
+    user.introduction = currentUser.value.introduction.trim();
+  }
+
+  ElMessage('确认保存？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'success',
+    center: true
+  }).then(() => {
+    http.post(constant.baseURL + "/user/updateUserInfo", user)
+        .then((res) => {
+          if (!common.isEmpty(res.data)) {
+            store.commit("loadCurrentUser", res.data);
+            currentUser.value = store.state.currentUser;
+            ElMessage({
+              message: "修改成功！",
+              type: "success"
             });
-          });
-      },
-      regist() {
-        if (this.$common.isEmpty(this.username) || this.$common.isEmpty(this.password)) {
-          this.$message({
-            message: "请输入用户名或密码！",
+          }
+        })
+        .catch((error) => {
+          ElMessage({
+            message: error.message,
             type: "error"
-          });
-          return;
-        }
-
-        if (this.dialogTitle === "邮箱验证码" && this.$common.isEmpty(this.email)) {
-          this.$message({
-            message: "请输入邮箱！",
-            type: "error"
-          });
-          return false;
-        }
-
-        if (this.$common.isEmpty(this.code)) {
-          this.$message({
-            message: "请输入验证码！",
-            type: "error"
-          });
-          return;
-        }
-
-        if (this.username.indexOf(" ") !== -1 || this.password.indexOf(" ") !== -1) {
-          this.$message({
-            message: "用户名或密码不能包含空格！",
-            type: "error"
-          });
-          return;
-        }
-
-        let user = {
-          username: this.username.trim(),
-          code: this.code.trim(),
-          password: this.$common.encrypt(this.password.trim())
-        };
-
-        if (this.dialogTitle === "邮箱验证码") {
-          user.email = this.email;
-        }
-
-        this.$http.post(this.$constant.baseURL + "/user/regist", user)
-          .then((res) => {
-            if (!this.$common.isEmpty(res.data)) {
-              this.$store.commit("loadCurrentUser", res.data);
-              localStorage.setItem("userToken", res.data.accessToken);
-              this.username = "";
-              this.password = "";
-              this.$router.push({path: '/'});
-              let userToken = this.$common.encrypt(localStorage.getItem("userToken"));
-              window.open(this.$constant.imBaseURL + "?userToken=" + userToken);
-            }
-          })
-          .catch((error) => {
-            this.$message({
-              message: error.message,
-              type: "error"
-            });
-          });
-      },
-      submitUserInfo() {
-        if (!this.checkParameters()) {
-          return;
-        }
-
-        let user = {
-          username: this.currentUser.username,
-          gender: this.currentUser.gender
-        };
-
-        if (!this.$common.isEmpty(this.currentUser.introduction)) {
-          user.introduction = this.currentUser.introduction.trim();
-        }
-
-        this.$confirm('确认保存？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'success',
-          center: true
-        }).then(() => {
-          this.$http.post(this.$constant.baseURL + "/user/updateUserInfo", user)
-            .then((res) => {
-              if (!this.$common.isEmpty(res.data)) {
-                this.$store.commit("loadCurrentUser", res.data);
-                this.currentUser = this.$store.state.currentUser;
-                this.$message({
-                  message: "修改成功！",
-                  type: "success"
-                });
-              }
-            })
-            .catch((error) => {
-              this.$message({
-                message: error.message,
-                type: "error"
-              });
-            });
-        }).catch(() => {
-          this.$message({
-            type: 'success',
-            message: '已取消保存!'
           });
         });
-      },
-      checkParams(params) {
-        if (this.dialogTitle === "修改手机号" || this.dialogTitle === "绑定手机号" || (this.dialogTitle === "找回密码" && this.passwordFlag === 1)) {
-          params.flag = 1;
-          if (this.$common.isEmpty(this.phoneNumber)) {
-            this.$message({
-              message: "请输入手机号！",
-              type: "error"
-            });
-            return false;
-          }
-          if (!(/^1[345789]\d{9}$/.test(this.phoneNumber))) {
-            this.$message({
-              message: "手机号格式有误！",
-              type: "error"
-            });
-            return false;
-          }
-          params.place = this.phoneNumber;
-          return true;
-        } else if (this.dialogTitle === "修改邮箱" || this.dialogTitle === "绑定邮箱" || this.dialogTitle === "邮箱验证码" || (this.dialogTitle === "找回密码" && this.passwordFlag === 2)) {
-          params.flag = 2;
-          if (this.$common.isEmpty(this.email)) {
-            this.$message({
-              message: "请输入邮箱！",
-              type: "error"
-            });
-            return false;
-          }
-          if (!(/^\w+@[a-zA-Z0-9]{2,10}(?:\.[a-z]{2,4}){1,3}$/.test(this.email))) {
-            this.$message({
-              message: "邮箱格式有误！",
-              type: "error"
-            });
-            return false;
-          }
-          params.place = this.email;
-          return true;
-        }
-        return false;
-      },
-      checkParameters() {
-        if (this.$common.isEmpty(this.currentUser.username)) {
-          this.$message({
-            message: "请输入用户名！",
-            type: "error"
-          });
-          return false;
-        }
+  }).catch(() => {
+    ElMessage({
+      type: 'success',
+      message: '已取消保存!'
+    });
+  });
+}
 
-        if (this.currentUser.username.indexOf(" ") !== -1) {
-          this.$message({
-            message: "用户名不能包含空格！",
-            type: "error"
-          });
-          return false;
-        }
-        return true;
-      },
-      changeDialog(value) {
-        if (value === "邮箱验证码") {
-          if (this.$common.isEmpty(this.email)) {
-            this.$message({
-              message: "请输入邮箱！",
-              type: "error"
-            });
-            return false;
-          }
-          if (!(/^\w+@[a-zA-Z0-9]{2,10}(?:\.[a-z]{2,4}){1,3}$/.test(this.email))) {
-            this.$message({
-              message: "邮箱格式有误！",
-              type: "error"
-            });
-            return false;
-          }
-        }
+const checkParams = (params) => {
+  if (dialogTitle.value === "修改手机号" || dialogTitle.value === "绑定手机号" || (dialogTitle.value === "找回密码" && password.value.valueFlag === 1)) {
+    params.flag = 1;
+    if (common.isEmpty(phoneNumber.value)) {
+      ElMessage({
+        message: "请输入手机号！",
+        type: "error"
+      });
+      return false;
+    }
+    if (!(/^1[345789]\d{9}$/.test(phoneNumber.value))) {
+      ElMessage({
+        message: "手机号格式有误！",
+        type: "error"
+      });
+      return false;
+    }
+    params.place = phoneNumber.value;
+    return true;
+  } else if (dialogTitle.value === "修改邮箱" || dialogTitle.value === "绑定邮箱" || dialogTitle.value === "邮箱验证码" || (dialogTitle.value === "找回密码" && password.value.valueFlag === 2)) {
+    params.flag = 2;
+    if (common.isEmpty(email.value)) {
+      ElMessage({
+        message: "请输入邮箱！",
+        type: "error"
+      });
+      return false;
+    }
+    if (!(/^\w+@[a-zA-Z0-9]{2,10}(?:\.[a-z]{2,4}){1,3}$/.test(email.value))) {
+      ElMessage({
+        message: "邮箱格式有误！",
+        type: "error"
+      });
+      return false;
+    }
+    params.place = email.value;
+    return true;
+  }
+  return false;
+}
 
-        this.dialogTitle = value;
-        this.showDialog = true;
-      },
-      submitDialog() {
-        if (this.dialogTitle === "修改头像") {
-          if (this.$common.isEmpty(this.avatar)) {
-            this.$message({
-              message: "请上传头像！",
-              type: "error"
-            });
-          } else {
-            let user = {
-              avatar: this.avatar.trim()
-            };
+const checkParameters = () => {
+  if (common.isEmpty(currentUser.value.username)) {
+    ElMessage({
+      message: "请输入用户名！",
+      type: "error"
+    });
+    return false;
+  }
 
-            this.$http.post(this.$constant.baseURL + "/user/updateUserInfo", user)
-              .then((res) => {
-                if (!this.$common.isEmpty(res.data)) {
-                  this.$store.commit("loadCurrentUser", res.data);
-                  this.currentUser = this.$store.state.currentUser;
-                  this.clearDialog();
-                  this.$message({
-                    message: "修改成功！",
-                    type: "success"
-                  });
-                }
-              })
-              .catch((error) => {
-                this.$message({
-                  message: error.message,
-                  type: "error"
-                });
-              });
-          }
-        } else if (this.dialogTitle === "修改手机号" || this.dialogTitle === "绑定手机号" || this.dialogTitle === "修改邮箱" || this.dialogTitle === "绑定邮箱") {
-          this.updateSecretInfo();
-        } else if (this.dialogTitle === "找回密码") {
-          if (this.passwordFlag !== 1 && this.passwordFlag !== 2) {
-            this.$message({
-              message: "请选择找回方式！",
-              type: "error"
-            });
-          } else {
-            this.updateSecretInfo();
-          }
-        } else if (this.dialogTitle === "邮箱验证码") {
-          this.showDialog = false;
-        }
-      },
-      updateSecretInfo() {
-        if (this.$common.isEmpty(this.code)) {
-          this.$message({
-            message: "请输入验证码！",
-            type: "error"
-          });
-          return;
-        }
-        if (this.$common.isEmpty(this.password)) {
-          this.$message({
-            message: "请输入密码！",
-            type: "error"
-          });
-          return;
-        }
-        let params = {
-          code: this.code.trim(),
-          password: this.$common.encrypt(this.password.trim())
-        };
-        if (!this.checkParams(params)) {
-          return;
-        }
+  if (currentUser.value.username.indexOf(" ") !== -1) {
+    ElMessage({
+      message: "用户名不能包含空格！",
+      type: "error"
+    });
+    return false;
+  }
+  return true;
+}
 
-        if (this.dialogTitle === "找回密码") {
-          this.$http.post(this.$constant.baseURL + "/user/updateForForgetPassword", params, false, false)
-            .then((res) => {
-              this.clearDialog();
-              this.$message({
-                message: "修改成功，请重新登陆！",
-                type: "success"
-              });
-            })
-            .catch((error) => {
-              this.$message({
-                message: error.message,
-                type: "error"
-              });
-            });
-        } else {
-          this.$http.post(this.$constant.baseURL + "/user/updateSecretInfo", params, false, false)
-            .then((res) => {
-              if (!this.$common.isEmpty(res.data)) {
-                this.$store.commit("loadCurrentUser", res.data);
-                this.currentUser = this.$store.state.currentUser;
-                this.clearDialog();
-                this.$message({
-                  message: "修改成功！",
-                  type: "success"
-                });
-              }
-            })
-            .catch((error) => {
-              this.$message({
-                message: error.message,
-                type: "error"
-              });
-            });
-        }
-      },
-      getCode() {
-        if (this.codeString === "验证码") {
-          // 获取验证码
-          let params = {};
-          if (!this.checkParams(params)) {
-            return;
-          }
-
-          let url;
-          if (this.dialogTitle === "找回密码" || this.dialogTitle === "邮箱验证码") {
-            url = "/user/getCodeForForgetPassword";
-          } else {
-            url = "/user/getCodeForBind";
-          }
-
-          this.$http.get(this.$constant.baseURL + url, params)
-            .then((res) => {
-              this.$message({
-                message: "验证码已发送，请注意查收！",
-                type: "success"
-              });
-            })
-            .catch((error) => {
-              this.$message({
-                message: error.message,
-                type: "error"
-              });
-            });
-          this.codeString = "30";
-          this.intervalCode = setInterval(() => {
-            if (this.codeString === "0") {
-              clearInterval(this.intervalCode)
-              this.codeString = "验证码";
-            } else {
-              this.codeString = (parseInt(this.codeString) - 1) + "";
-            }
-          }, 1000);
-        } else {
-          this.$message({
-            message: "请稍后再试！",
-            type: "warning"
-          });
-        }
-      },
-      clearDialog() {
-        this.password = "";
-        this.phoneNumber = "";
-        this.email = "";
-        this.avatar = "";
-        this.showDialog = false;
-        this.code = "";
-        this.dialogTitle = "";
-        this.passwordFlag = null;
-      }
+const changeDialog = (value) => {
+  //选择展示的框
+  if (value === "邮箱验证码") {
+    //验证邮箱格式
+    if (common.isEmpty(email.value)) {
+      ElMessage({
+        message: "请输入邮箱！",
+        type: "error"
+      });
+      return false;
+    }
+    if (!(/^\w+@[a-zA-Z0-9]{2,10}(?:\.[a-z]{2,4}){1,3}$/.test(email.value))) {
+      ElMessage({
+        message: "邮箱格式有误！",
+        type: "error"
+      });
+      return false;
     }
   }
+
+  dialogTitle.value = value;
+  showDialog.value = true;
+}
+
+const submitDialog = () => {
+  if (dialogTitle.value === "修改头像") {
+    if (common.isEmpty(avatar.value)) {
+      ElMessage({
+        message: "请上传头像！",
+        type: "error"
+      });
+    } else {
+      let user = {
+        avatar: avatar.value.trim()
+      };
+
+      http.post(constant.baseURL + "/user/updateUserInfo", user)
+          .then((res) => {
+            if (!common.isEmpty(res.data)) {
+              store.commit("loadCurrentUser", res.data);
+              currentUser.value = store.state.currentUser;
+              clearDialog();
+              ElMessage({
+                message: "修改成功！",
+                type: "success"
+              });
+            }
+          })
+          .catch((error) => {
+            ElMessage({
+              message: error.message,
+              type: "error"
+            });
+          });
+    }
+  } else if (dialogTitle.value === "修改手机号" || dialogTitle.value === "绑定手机号" || dialogTitle.value === "修改邮箱" || dialogTitle.value === "绑定邮箱") {
+    updateSecretInfo();
+  } else if (dialogTitle.value === "找回密码") {
+    if (password.value.valueFlag !== 1 && password.value.valueFlag !== 2) {
+      ElMessage({
+        message: "请选择找回方式！",
+        type: "error"
+      });
+    } else {
+      updateSecretInfo();
+    }
+  } else if (dialogTitle.value === "邮箱验证码") {
+    showDialog.value = false;
+  }
+}
+const updateSecretInfo = () => {
+  if (common.isEmpty(code.value)) {
+    ElMessage({
+      message: "请输入验证码！",
+      type: "error"
+    });
+    return;
+  }
+  if (common.isEmpty(password.value)) {
+    ElMessage({
+      message: "请输入密码！",
+      type: "error"
+    });
+    return;
+  }
+  let params = {
+    code: code.value.trim(),
+    password: common.encrypt(password.value.trim())
+  };
+  if (!checkParams(params)) {
+    return;
+  }
+
+  if (dialogTitle.value === "找回密码") {
+    http.post(constant.baseURL + "/user/updateForForgetPassword", params, false, false)
+        .then(() => {
+          clearDialog();
+          ElMessage({
+            message: "修改成功，请重新登陆！",
+            type: "success"
+          });
+        })
+        .catch((error) => {
+          ElMessage({
+            message: error.message,
+            type: "error"
+          });
+        });
+  } else {
+    http.post(constant.baseURL + "/user/updateSecretInfo", params, false, false)
+        .then((res) => {
+          if (!common.isEmpty(res.data)) {
+            store.commit("loadCurrentUser", res.data);
+            currentUser.value = store.state.currentUser;
+            clearDialog();
+            ElMessage({
+              message: "修改成功！",
+              type: "success"
+            });
+          }
+        })
+        .catch((error) => {
+          ElMessage({
+            message: error.message,
+            type: "error"
+          });
+        });
+  }
+}
+
+const getCode = () => {
+  if (codeString.value === "验证码") {
+    // 获取验证码
+    let params = {};
+    if (!checkParams(params)) {
+      return;
+    }
+
+    let url;
+    if (dialogTitle.value === "找回密码" || dialogTitle.value === "邮箱验证码") {
+      url = "/user/getCodeForForgetPassword";
+    } else {
+      url = "/user/getCodeForBind";
+    }
+    console.log(constant.baseURL + url)
+    http.get(constant.baseURL + url, params)
+        .then(() => {
+          ElMessage({
+            message: "验证码已发送，请注意查收！",
+            type: "success"
+          });
+        })
+        .catch((error) => {
+          ElMessage({
+            message: error.message,
+            type: "error"
+          });
+        });
+    codeString.value = "30";
+    intervalCode.value = setInterval(() => {
+      if (codeString.value === "0") {
+        clearInterval(intervalCode.value)
+        codeString.value = "验证码";
+      } else {
+        codeString.value = (parseInt(codeString) - 1) + "";
+      }
+    }, 1000);
+  } else {
+    ElMessage({
+      message: "请稍后再试！",
+      type: "warning"
+    });
+  }
+}
+
+const clearDialog = () => {
+  password.value = "";
+  phoneNumber.value = "";
+  email.value = "";
+  avatar.value = "";
+  showDialog.value = false;
+  code.value = "";
+  dialogTitle.value = "";
+  password.value.valueFlag = null;
+}
+
+
 </script>
 
 <style scoped>
 
-  .in-up-container {
-    height: 100vh;
-    position: relative;
-  }
+.in-up-container {
+  height: 100vh;
+  position: relative;
+}
 
-  .in-up {
-    opacity: 0.9;
-    border-radius: 10px;
-    box-shadow: 0 15px 30px var(--miniMask), 0 10px 10px var(--miniMask);
-    position: relative;
-    overflow: hidden;
-    width: 750px;
-    max-width: 100%;
-    min-height: 450px;
-    margin: 10px;
-  }
+.in-up {
+  opacity: 0.9;
+  border-radius: 10px;
+  box-shadow: 0 15px 30px var(--miniMask), 0 10px 10px var(--miniMask);
+  position: relative;
+  overflow: hidden;
+  width: 750px;
+  max-width: 100%;
+  min-height: 450px;
+  margin: 10px;
+}
 
-  .in-up p {
-    font-size: 14px;
-    letter-spacing: 1px;
-    margin: 20px 0 30px 0;
-  }
+.in-up p {
+  font-size: 14px;
+  letter-spacing: 1px;
+  margin: 20px 0 30px 0;
+}
 
-  .in-up a {
-    color: var(--black);
-    font-size: 14px;
-    text-decoration: none;
-    margin: 15px 0;
-  }
+.in-up a {
+  color: var(--black);
+  font-size: 14px;
+  text-decoration: none;
+  margin: 15px 0;
+}
 
-  .form-container {
-    position: absolute;
-    height: 100%;
-    transition: all 0.5s ease-in-out;
-  }
+.form-container {
+  position: absolute;
+  height: 100%;
+  transition: all 0.5s ease-in-out;
+}
 
-  .sign-in-container {
-    left: 0;
-    width: 50%;
-  }
+.sign-in-container {
+  left: 0;
+  width: 50%;
+}
 
-  .sign-up-container {
-    left: 0;
-    width: 50%;
-    opacity: 0;
-  }
+.sign-up-container {
+  left: 0;
+  width: 50%;
+  opacity: 0;
+}
 
-  .form-container div {
-    background: var(--white);
-    flex-direction: column;
-    padding: 0 20px;
-    height: 100%;
-  }
+.form-container div {
+  background: var(--white);
+  flex-direction: column;
+  padding: 0 20px;
+  height: 100%;
+}
 
-  .form-container input {
-    background: var(--maxLightGray);
-    border-radius: 2px;
-    border: none;
-    padding: 12px 15px;
-    margin: 10px 0;
-    width: 100%;
-    outline: none;
-  }
+.form-container input {
+  background: var(--maxLightGray);
+  border-radius: 2px;
+  border: none;
+  padding: 12px 15px;
+  margin: 10px 0;
+  width: 100%;
+  outline: none;
+}
 
-  .in-up button {
-    border-radius: 2rem;
-    border: none;
-    background: var(--lightRed);
-    color: var(--white);
-    font-size: 16px;
-    font-weight: bold;
-    padding: 12px 45px;
-    letter-spacing: 2px;
-    cursor: pointer;
-  }
+.in-up button {
+  border-radius: 2rem;
+  border: none;
+  background: var(--lightRed);
+  color: var(--white);
+  font-size: 16px;
+  font-weight: bold;
+  padding: 12px 45px;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
 
-  .in-up button:hover {
-    animation: scale 0.8s ease-in-out;
-  }
+.in-up button:hover {
+  animation: scale 0.8s ease-in-out;
+}
 
-  .in-up button.ghost {
-    background: transparent;
-    border: 1px solid var(--white);
-  }
+.in-up button.ghost {
+  background: transparent;
+  border: 1px solid var(--white);
+}
 
-  .sign-up-container button {
-    margin-top: 20px;
-  }
+.sign-up-container button {
+  margin-top: 20px;
+}
 
-  .overlay-container {
-    position: absolute;
-    left: 50%;
-    width: 50%;
-    height: 100%;
-    overflow: hidden;
-    transition: all 0.5s ease-in-out;
-  }
+.overlay-container {
+  position: absolute;
+  left: 50%;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  transition: all 0.5s ease-in-out;
+}
 
-  .overlay {
-    background: var(--gradualRed);
-    color: var(--white);
-    position: relative;
-    left: -100%;
-    height: 100%;
-    width: 200%;
-  }
+.overlay {
+  background: var(--gradualRed);
+  color: var(--white);
+  position: relative;
+  left: -100%;
+  height: 100%;
+  width: 200%;
+}
 
-  .overlay-panel {
-    position: absolute;
-    top: 0;
-    flex-direction: column;
-    height: 100%;
-    width: 50%;
-    transition: all 0.5s ease-in-out;
-  }
+.overlay-panel {
+  position: absolute;
+  top: 0;
+  flex-direction: column;
+  height: 100%;
+  width: 50%;
+  transition: all 0.5s ease-in-out;
+}
 
-  .overlay-right {
-    right: 0;
-    transform: translateY(0);
-  }
+.overlay-right {
+  right: 0;
+  transform: translateY(0);
+}
 
-  .overlay-left {
-    transform: translateY(-20%);
-  }
+.overlay-left {
+  transform: translateY(-20%);
+}
 
-  .in-up.right-panel-active .sign-in-container {
-    transform: translateY(100%);
-  }
+.in-up.right-panel-active .sign-in-container {
+  transform: translateY(100%);
+}
 
-  .in-up.right-panel-active .overlay-container {
-    transform: translateX(-100%);
-  }
+.in-up.right-panel-active .overlay-container {
+  transform: translateX(-100%);
+}
 
-  .in-up.right-panel-active .sign-up-container {
-    transform: translateX(100%);
-    opacity: 1;
-  }
+.in-up.right-panel-active .sign-up-container {
+  transform: translateX(100%);
+  opacity: 1;
+}
 
-  .in-up.right-panel-active .overlay {
-    transform: translateX(50%);
-  }
+.in-up.right-panel-active .overlay {
+  transform: translateX(50%);
+}
 
-  .in-up.right-panel-active .overlay-left {
-    transform: translateY(0);
-  }
+.in-up.right-panel-active .overlay-left {
+  transform: translateY(0);
+}
 
-  .in-up.right-panel-active .overlay-right {
-    transform: translateY(20%);
-  }
+.in-up.right-panel-active .overlay-right {
+  transform: translateY(20%);
+}
 
-  .user-container {
-    width: 100vw;
-    height: 100vh;
-    position: relative;
-  }
+.user-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
 
+.user-info {
+  width: 80%;
+  z-index: 10;
+  margin-top: 70px;
+  height: calc(100vh - 90px);
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.user-left {
+  width: 50%;
+  background: var(--maxMaxWhiteMask);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.user-right {
+  width: 50%;
+  background: var(--maxWhiteMask);
+  padding: 20px;
+}
+
+.user-title {
+  text-align: right;
+  user-select: none;
+}
+
+.user-content {
+  text-align: left;
+}
+
+.user-title div {
+  height: 55px;
+  line-height: 55px;
+  text-align: center;
+}
+
+.user-content > div {
+  height: 55px;
+  display: flex;
+  align-items: center;
+}
+
+.user-content >>> .el-input__inner, .user-content >>> .el-textarea__inner {
+  border: none;
+  background: var(--whiteMask);
+}
+
+.user-content >>> .el-input__count {
+  background: var(--transparent);
+  user-select: none;
+}
+
+.changeInfo {
+  color: var(--white);
+  font-size: 0.75rem;
+  cursor: pointer;
+  background: var(--themeBackground);
+  padding: 3px;
+  border-radius: 0.2rem;
+  user-select: none;
+}
+
+@media screen and (max-width: 920px) {
   .user-info {
-    width: 80%;
-    z-index: 10;
-    margin-top: 70px;
-    height: calc(100vh - 90px);
-    margin-bottom: 20px;
-    border-radius: 10px;
-    overflow: hidden;
+    width: 90%;
   }
 
   .user-left {
-    width: 50%;
-    background: var(--maxMaxWhiteMask);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow-y: auto;
-    padding: 20px;
+    width: 100%;
   }
 
   .user-right {
-    width: 50%;
-    background: var(--maxWhiteMask);
-    padding: 20px;
+    display: none;
   }
-
-  .user-title {
-    text-align: right;
-    user-select: none;
-  }
-
-  .user-content {
-    text-align: left;
-  }
-
-  .user-title div {
-    height: 55px;
-    line-height: 55px;
-    text-align: center;
-  }
-
-  .user-content > div {
-    height: 55px;
-    display: flex;
-    align-items: center;
-  }
-
-  .user-content >>> .el-input__inner, .user-content >>> .el-textarea__inner {
-    border: none;
-    background: var(--whiteMask);
-  }
-
-  .user-content >>> .el-input__count {
-    background: var(--transparent);
-    user-select: none;
-  }
-
-  .changeInfo {
-    color: var(--white);
-    font-size: 0.75rem;
-    cursor: pointer;
-    background: var(--themeBackground);
-    padding: 3px;
-    border-radius: 0.2rem;
-    user-select: none;
-  }
-
-  @media screen and (max-width: 920px) {
-    .user-info {
-      width: 90%;
-    }
-
-    .user-left {
-      width: 100%;
-    }
-
-    .user-right {
-      display: none;
-    }
-  }
+}
 </style>

@@ -20,11 +20,10 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
-
   mail:
     host: smtp.qq.com
-    username:
-    password:
+    username: 2372977246@qq.com
+    password: gkllzerxswcjeahh
     default-encoding: utf-8
     protocol: smtp
     port: 465
@@ -36,6 +35,7 @@ spring:
             class: javax.net.ssl.SSLSocketFactory
           ssl:
             enable: true
+    test-connection: true
 
   datasource:
     username: root
@@ -43,6 +43,14 @@ spring:
     url: jdbc:mysql://localhost:3306/shblog?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+email:
+  host: smtp.qq.com
+  username: 2372977246@qq.com
+  password: gkllzerxswcjeahh
+  default-encoding: utf-8
+  protocol: smtp
+  port: 465
 
 user:
   code:
@@ -64,3 +72,8 @@ qiniu:
   secretKey:
   bucket:
   downloadUrl:
+
+
+logging:
+  level:
+    web: debug

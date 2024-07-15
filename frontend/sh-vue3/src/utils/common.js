@@ -6,7 +6,6 @@ import $ from 'jquery'
 export default {
     pushNotification(notices, isNotification) {
         if (isNotification) {
-            console.log(notices)
             if (this.isEmpty(notices)) {
                 return [];
             } else {

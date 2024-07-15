@@ -38,10 +38,7 @@ import org.springframework.util.StringUtils;
 import org.tio.core.Tio;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -71,6 +68,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Value("${user.code.format}")
     private String codeFormat;
+
+    public static void main(String[] args) {
+
+        String password = new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt("FPFKi9vOvZPABLBGfX_fIA=="));
+        System.out.println(password);
+        String s = DigestUtils.md5DigestAsHex(password.getBytes());
+        System.out.println(s);
+    }
 
     @Override
     public PoetryResult<UserVO> login(String account, String password, Boolean isAdmin) {
@@ -211,8 +216,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         u.setEmail(user.getEmail());
         u.setPassword(DigestUtils.md5DigestAsHex(user.getPassword().getBytes()));
         u.setAvatar(PoetryUtil.getRandomAvatar(null));
-        save(u);
+        //注册用户，添加到数据库
+        save(u);  //用的mybatis-plus的默认方法
 
+        //重新查询出来
         User one = lambdaQuery().eq(User::getId, u.getId()).one();
 
         String userToken = CommonConst.USER_ACCESS_TOKEN + UUID.randomUUID().toString().replaceAll("-", "");
@@ -322,7 +329,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return PoetryResult.fail("验证码发送次数过多，请明天再试！");
             }
         }
-        PoetryCache.put(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + flag, Integer.valueOf(i), 300);
+        PoetryCache.put(CommonConst.USER_CODE + PoetryUtil.getUserId() + "_" + flag, i, 300);
         return PoetryResult.success();
     }
 
@@ -417,11 +424,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public PoetryResult getCodeForForgetPassword(String place, Integer flag) {
+        System.out.println(place);
+        System.out.println(flag);
         int i = new Random().nextInt(900000) + 100000;
         if (flag == 1) {
             log.info(place + "---" + "手机验证码---" + i);
         } else if (flag == 2) {
-            log.info(place + "---" + "邮箱验证码---" + i);
+            log.info("{}---邮箱验证码---{}", place, i);
 
             List<String> mail = new ArrayList<>();
             mail.add(place);
@@ -430,17 +439,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
             AtomicInteger count = (AtomicInteger) PoetryCache.get(CommonConst.CODE_MAIL + mail.get(0));
             if (count == null || count.get() < CommonConst.CODE_MAIL_COUNT) {
-                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "POETIZE" : webInfo.getWebName()) + "的回执！", text);
+                mailUtil.sendMailMessage(mail, "您有一封来自" + (webInfo == null ? "ShBlog" : webInfo.getWebName()) + "的回执！", text);
                 if (count == null) {
                     PoetryCache.put(CommonConst.CODE_MAIL + mail.get(0), new AtomicInteger(1), CommonConst.CODE_EXPIRE);
                 } else {
+                    //采用一个原子类型的值记录发送次数
                     count.incrementAndGet();
                 }
             } else {
                 return PoetryResult.fail("验证码发送次数过多，请明天再试！");
             }
         }
-        PoetryCache.put(CommonConst.FORGET_PASSWORD + place + "_" + flag, Integer.valueOf(i), 300);
+        PoetryCache.put(CommonConst.FORGET_PASSWORD + place + "_" + flag, i, 300);
         return PoetryResult.success();
     }
 
@@ -594,7 +604,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private String getCodeMail(int i) {
         WebInfo webInfo = (WebInfo) PoetryCache.get(CommonConst.WEB_INFO);
-        String webName = (webInfo == null ? "POETIZE" : webInfo.getWebName());
+        String webName = (webInfo == null ? "ShBlog" : webInfo.getWebName());
         return String.format(mailUtil.getMailText(),
                 webName,
                 String.format(MailUtil.imMail, PoetryUtil.getAdminUser().getUsername()),

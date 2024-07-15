@@ -3,14 +3,24 @@ package com.sh.utils.mail;
 import com.alibaba.fastjson.JSON;
 import com.sh.constants.CommonConst;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
+import jakarta.mail.internet.MimeMessage;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -47,8 +57,14 @@ public class MailUtil {
     @Autowired
     private JavaMailSender mailSender;
 
+    @Autowired
+    private JavaMailSenderImpl javaMailSender;
+
+    @Autowired
+    private Environment env;
+
     @Value("${spring.mail.username}")
-    private String sendMailer;
+    private String sender;
 
     /**
      * 1. 网站名称
@@ -58,6 +74,7 @@ public class MailUtil {
      * 5. originalText
      * 6. 网站名称
      */
+    @Getter
     private String mailText;
 
     @PostConstruct
@@ -85,7 +102,7 @@ public class MailUtil {
                 "            </div>\n" +
                 "            %s\n" +
                 "            <a style=\"width: 150px;height: 38px;background: #ef859d38;border-radius: 32px;display: flex;align-items: center;justify-content: center;text-decoration: none;margin: 40px auto 0\"\n" +
-                "               href=\"https://poetize.cn\" target=\"_blank\">\n" +
+                "               href=\"https://localhost:5173/\" target=\"_blank\">\n" +
                 "                <span style=\"color: #DB214B\">有朋自远方来</span>\n" +
                 "            </a>\n" +
                 "        </div>\n" +
@@ -96,10 +113,6 @@ public class MailUtil {
                 "</div>";
     }
 
-    public String getMailText() {
-        return mailText;
-    }
-
     @Async
     public void sendMailMessage(List<String> to, String subject, String text) {
         log.info("发送邮件===================");
@@ -107,24 +120,28 @@ public class MailUtil {
         log.info("subject：{}", subject);
         log.info("text：{}", text);
         try {
-            //true代表支持复杂的类型
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mailSender.createMimeMessage(), true);
-            //邮件发信人
-            mimeMessageHelper.setFrom(sendMailer);
-            //邮件收信人1或多个
-            mimeMessageHelper.setTo(to.toArray(new String[0]));
-            //邮件主题
-            mimeMessageHelper.setSubject(subject);
-            //邮件内容
-            mimeMessageHelper.setText(text, true);
-            //邮件发送时间
-            mimeMessageHelper.setSentDate(new Date());
+            MimeMessagePreparator mimeMessagePreparator = mimeMessage -> {
+                //true代表支持复杂的类型
+                MimeMessageHelper message = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                //邮件发信人
+                message.setFrom(env.getProperty("email.username"));
+                //邮件收信人1或多个
+                message.setTo(to.toArray(new String[0]));
+                //邮件主题
+                message.setSubject(subject);
+                //邮件内容
+                message.setText(text, true);
+                //邮件发送时间
+                message.setSentDate(new Date());
+            };
 
-            //发送邮件
-            mailSender.send(mimeMessageHelper.getMimeMessage());
+            javaMailSender.setUsername(env.getProperty("email.username"));
+            javaMailSender.setPassword(env.getProperty("email.password"));
 
+            javaMailSender.send(mimeMessagePreparator);
             log.info("发送成功==================");
         } catch (Exception e) {
+            e.printStackTrace();
             log.info("发送失败==================");
             log.error(e.getMessage());
         }

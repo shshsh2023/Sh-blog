@@ -22,7 +22,7 @@ import './assets/css/markdown-highlight.css'
 import './assets/css/font-awesome.min.css'
 import 'mavon-editor/dist/css/index.css'
 
-import {vueBaberrage} from 'vue-baberrage'
+// import {vueBaberrage} from 'vue-baberrage'
 import App from './App.vue'
 
 const app = createApp(App)
@@ -35,7 +35,8 @@ app.config.globalProperties.$constant = constant
 
 app.use(ElementPlus)
 app.use(ElementPlusIconsVue)
-app.use(vueBaberrage)
+// app.use(vueBaberrage)
+
 app.use(mavonEditor)
 app.use(router)
 app.use(store)

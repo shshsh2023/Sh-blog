@@ -1,16 +1,18 @@
 <script setup>
-import {RouterLink, RouterView} from 'vue-router'
-// import HelloWorld from './components/HelloWorld.vue'
-import Home from "./components/home.vue"
+import {RouterView} from 'vue-router'
 </script>
 
 <template>
-<!--  <Home/>-->
   <div id="app">
     <router-view/>
   </div>
 </template>
 
-<style scoped>
-
+<style scoped lang="scss">
+//@import "./assets/webfont/font.css";
+//
+//#app {
+//  font-family: qiantuxianmo, serif;
+//  font-weight: 400;
+//}
 </style>

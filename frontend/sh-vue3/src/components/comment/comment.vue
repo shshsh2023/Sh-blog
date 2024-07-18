@@ -104,7 +104,7 @@
     </div>
 
     <el-dialog title="留言"
-               v-model:visible="replyDialogVisible"
+               v-model="replyDialogVisible"
                width="30%"
                :before-close="handleClose"
                :append-to-body="true"
@@ -148,26 +148,29 @@ const props = defineProps({
   }
 })
 
+// const emit = defineEmits({
+//
+// })
+
 const isGraffiti = ref(false)
 const total = ref(0)
 let replyDialogVisible = ref(false)
 let floorComment = {}
 let replyComment = {}
-let comments = []
+let comments = ref([])
 
 const pagination = ref({
-  current: 1,
-  size: 10,
-  total: 0,
-  source: props.source,
-  commentType: props.type,
-  floorCommentId: null
+  current: 1,  //第一页
+  size: 10,  //每页展示的评论数
+  total: 0,  //总页数
+  source: props.source,  //来源
+  commentType: props.type,  //类型
+  floorCommentId: null   //评论回答
 })
 
 onMounted(() => {
-  getComments(pagination);
+  getComments(pagination.value);
   getTotal();
-
 })
 
 
@@ -176,7 +179,7 @@ const toPage = (page) => {
   window.scrollTo({
     top: document.getElementById('comment-content').offsetTop
   });
-  getComments(pagination);
+  getComments(pagination.value);
 }
 
 const getTotal = () => {
@@ -190,9 +193,10 @@ const getTotal = () => {
         ElMessage.error(error.message);
       });
 }
+
 const toChildPage = (floorComment) => {
   floorComment.childComments.current += 1;
-  let pagination = {
+  pagination.value = {
     current: floorComment.childComments.current,
     size: 5,
     total: 0,
@@ -200,11 +204,11 @@ const toChildPage = (floorComment) => {
     commentType: props.type,
     floorCommentId: floorComment.id
   }
-  getComments(pagination, floorComment, true);
+  getComments(pagination.value, floorComment, true);
 }
 
 const emoji = (comments, flag) => {
-  comments.forEach(c => {
+  comments.value.forEach(c => {
     c.commentContent = c.commentContent.replace(/\n/g, '<br/>');
     c.commentContent = common.faceReg(c.commentContent);
     c.commentContent = common.pictureReg(c.commentContent);
@@ -219,13 +223,14 @@ const emoji = (comments, flag) => {
     }
   });
 }
-const getComments = (pagination, floorComment = {}, isToPage = false) => {
-  http.post(constant.baseURL + "/comment/listComment", pagination)
+
+const getComments = (pagination_temp, floorComment = {}, isToPage = false) => {
+  http.post(constant.baseURL + "/comment/listComment", pagination.value)
       .then((res) => {
         if (!common.isEmpty(res.data) && !common.isEmpty(res.data.records)) {
           if (common.isEmpty(floorComment)) {
-            comments = res.data.records;
-            pagination.total = res.data.total;
+            comments.value = res.data.records;
+            pagination.value.total = res.data.total;  //赋值一下分页的总数
             emoji(comments, true);
           } else {
             if (isToPage === false) {
@@ -268,7 +273,7 @@ const submitComment = (commentContent) => {
           commentType: props.type,
           floorCommentId: null
         }
-        getComments(pagination);
+        getComments(pagination.value);
         getTotal();
       })
       .catch((error) => {
@@ -286,11 +291,9 @@ const submitReply = (commentContent) => {
     parentUserId: replyComment.userId
   };
 
-  let floorComment = floorComment;
-
   http.post(constant.baseURL + "/comment/saveComment", comment)
       .then(() => {
-        let pagination = {
+        let pagination_temp = {
           current: 1,
           size: 5,
           total: 0,
@@ -298,7 +301,7 @@ const submitReply = (commentContent) => {
           commentType: props.type,
           floorCommentId: floorComment.id
         }
-        getComments(pagination, floorComment);
+        getComments(pagination_temp, floorComment);
         getTotal();
       })
       .catch((error) => {

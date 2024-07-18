@@ -9,10 +9,10 @@ import {RouterView} from 'vue-router'
 </template>
 
 <style scoped lang="scss">
-//@import "./assets/webfont/font.css";
-//
-//#app {
-//  font-family: qiantuxianmo, serif;
-//  font-weight: 400;
-//}
+@import "./assets/webfont/font.css";
+
+#app {
+  font-family:  sans-serif, serif, qiantuxianmo;
+  font-weight: 400;
+}
 </style>

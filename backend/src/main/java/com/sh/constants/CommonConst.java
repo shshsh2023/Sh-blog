@@ -4,9 +4,9 @@ package com.sh.constants;
 public class CommonConst {
 
     /**
-     * 超级管理员的用户Id
+     * 超级管理员的用户类型， 0 为超级管理员， 1 为普通管理员 2 为普通用户
      */
-    public static final int ADMIN_USER_ID = 1;
+    public static final int ADMIN_USER_ID = 0;
 
     /**
      * 根据用户ID获取Token

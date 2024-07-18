@@ -8,7 +8,7 @@
         <el-image class="article-image my-el-image"
                   v-once
                   lazy
-                  :src="img"
+                  :src="img_href"
                   fit="cover">
           <template v-slot:error>
             <div class="image-slot">
@@ -102,9 +102,10 @@
           </div>
         </div>
 
+        <!--    最新进展 的那个加号  -->
         <div class="article-info-news"
-             @click="weiYanDialogVisible = true">
-<!--             v-if="!common.isEmpty(store.state.currentUser) && store.state.currentUser.id === article.userId">-->
+             @click="weiYanDialogVisible = true"
+             v-if="!common.isEmpty(store.state.currentUser) && store.state.currentUser.id === article.userId">
           <svg width="30" height="30" viewBox="0 0 1024 1024">
             <path d="M0 0h1024v1024H0V0z" fill="#202425" opacity=".01"></path>
             <path
@@ -115,6 +116,7 @@
                 fill="#FFFFFF"></path>
           </svg>
         </div>
+
       </div>
       <!-- 文章 -->
       <div style="background: var(--background);">
@@ -165,7 +167,9 @@
 
           <!-- 订阅 -->
           <div class="myCenter" id="article-like" @click="subscribeLabel">
-            <el-icon class="article-like-icon" :class="{'article-like': subscribe}"><Ship /></el-icon>
+            <el-icon class="article-like-icon" :class="{'article-like': subscribe}">
+              <Ship/>
+            </el-icon>
           </div>
 
           <!-- 评论 -->
@@ -257,9 +261,11 @@
                center>
       <div>
         <div class="myCenter" style="margin-bottom: 20px">
+          <!--    todo 有问题  获取不到时间    -->
           <el-date-picker
               v-model="newsTime"
-              value-format="yyyy-MM-dd HH:mm:ss"
+              value-format="YYYY-MM-DD hh:mm:ss"
+              format="YYYY/MM/DD hh:mm:ss"
               type="datetime"
               placeholder="选择日期时间">
           </el-date-picker>
@@ -342,7 +348,9 @@ let scrollTop = 0
 
 const store = useStore()
 
-const img = 'https://img.zcool.cn/community/01585d55c2ef736ac7253f36abae49.jpg?imageMogr2/auto-orient/thumbnail/1280x%3e/sharpen/0.5/quality/100'
+// const img = 'https://img.zcool.cn/community/01585d55c2ef736ac7253f36abae49.jpg?imageMogr2/auto-orient/thumbnail/1280x%3e/sharpen/0.5/quality/100'
+const img_href = new URL("@/assets/imgs/bg.jpg", import.meta.url).href;
+
 
 onMounted((() => {
   if (!common.isEmpty(id.value)) {
@@ -443,13 +451,15 @@ const deleteTreeHole = (id) => {
     ElMessage.success("已取消删除");
   });
 };
+
 const submitWeiYan = (content) => {
-  let weiYan = {
+  console.log(content)
+  const weiYan = {
     content: content,
-    createTime: newsTime,
+    createTime: newsTime.value,
     source: article.value.id
   };
-
+  console.log(weiYan)
   http.post(constant.baseURL + "/weiYan/saveNews", weiYan)
       .then(() => {
         weiYanDialogVisible.value = false;
@@ -460,6 +470,7 @@ const submitWeiYan = (content) => {
         ElMessage.error(error.message);
       });
 }
+
 const getNews = () => {
   http.post(constant.baseURL + "/weiYan/listNews", {
     current: 1,

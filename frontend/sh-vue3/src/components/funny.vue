@@ -47,7 +47,7 @@
               <div style="width: 150px" v-for="(funny, i) in item.data" :key="i">
                 <el-avatar class="funny-avatar myCenter" :size="110"
                            style="margin: 20px"
-                           @click.native="playSound(funny.url, item.data, i)"
+                           @click="playSound(funny.url, item.data, i)"
                            :src="funny.cover">
                 </el-avatar>
                 <div class="funny-item-title">{{funny.title}}</div>

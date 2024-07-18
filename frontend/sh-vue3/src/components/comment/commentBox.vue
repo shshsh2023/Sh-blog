@@ -78,6 +78,8 @@ defineProps({
   }
 })
 
+const emit = defineEmits(['submitComment'])
+
 
 let commentContent = ref("")
 const showEmoji = ref(false)
@@ -129,11 +131,12 @@ const submitComment = () => {
     return;
   }
 
-  if (this.commentContent.trim() === "") {
+  if (commentContent.value.trim() === "") {
     ElMessage.warning("你还没写呢~");
     return;
   }
-  this.$emit("submitComment", this.commentContent.trim());
+  emit("submitComment", commentContent.value.trim())
+  // this.$emit("submitComment", commentContent.value.trim());
   commentContent.value = "";
 }
 </script>

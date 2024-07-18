@@ -101,6 +101,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String adminToken = "";
         String userToken = "";
 
+        //管理员登录
         if (isAdmin) {
             if (one.getUserType() != PoetryEnum.USER_TYPE_ADMIN.getCode() && one.getUserType() != PoetryEnum.USER_TYPE_DEV.getCode()) {
                 return PoetryResult.fail("请输入管理员账号！");
@@ -191,25 +192,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return PoetryResult.fail("请输入邮箱或手机号！");
         }
 
-
+        //前端传过来经过加密的密码 使用AES算法进行解密
         user.setPassword(new String(SecureUtil.aes(CommonConst.CRYPOTJS_KEY.getBytes(StandardCharsets.UTF_8)).decrypt(user.getPassword())));
-
-        Integer count = lambdaQuery().eq(User::getUsername, user.getUsername()).count().intValue();
+        //查询是否有相同的用户名
+        int count = lambdaQuery().eq(User::getUsername, user.getUsername()).count().intValue();
         if (count != 0) {
             return PoetryResult.fail("用户名重复！");
         }
         if (StringUtils.hasText(user.getPhoneNumber())) {
-            Integer phoneNumberCount = lambdaQuery().eq(User::getPhoneNumber, user.getPhoneNumber()).count().intValue();
+            int phoneNumberCount = lambdaQuery().eq(User::getPhoneNumber, user.getPhoneNumber()).count().intValue();
             if (phoneNumberCount != 0) {
                 return PoetryResult.fail("手机号重复！");
             }
         } else if (StringUtils.hasText(user.getEmail())) {
-            Integer emailCount = lambdaQuery().eq(User::getEmail, user.getEmail()).count().intValue();
+            int emailCount = lambdaQuery().eq(User::getEmail, user.getEmail()).count().intValue();
             if (emailCount != 0) {
                 return PoetryResult.fail("邮箱重复！");
             }
         }
 
+        //构建User
         User u = new User();
         u.setUsername(user.getUsername());
         u.setPhoneNumber(user.getPhoneNumber());
@@ -226,6 +228,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         PoetryCache.put(userToken, one, CommonConst.TOKEN_EXPIRE);
         PoetryCache.put(CommonConst.USER_TOKEN + one.getId(), userToken, CommonConst.TOKEN_EXPIRE);
 
+        //构建返回的数据json
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(one, userVO);
         userVO.setPassword(null);

@@ -27,11 +27,24 @@
                   @click="submitMessage"
                   class="message-input">发射
           </button>
+          <button v-show="show"
+                  style="margin-left: 12px;cursor: pointer;width: 20%"
+                  @click="danmakuRef.value.pause()"
+                  class="message-input">暂停播放
+          </button>
         </div>
       </div>
       <!-- 弹幕 -->
       <div class="barrage-container">
-        <vue-danmaku ref="danmakuRef" v-model:danmus="danmus" loop :style="danmaku_style"></vue-danmaku>
+        <vue-danmaku  :ref="danmakuRef" v-model:danmus="danmusList" :autoplay="autoplay" :style="danmaku_style" loop
+                     :speeds="danmaku_speeds" use-slot :channels="10" :random-channel="true" right="10px">
+          <template v-slot:dm="{ index, danmu }">
+            <div>
+              <el-avatar :size="20" :src="danmu.avatar"/>
+              <span>{{ danmu.msg }}</span>
+            </div>
+          </template>
+        </vue-danmaku>
       </div>
     </div>
     <div class="comment-wrap">
@@ -50,7 +63,9 @@ import {useStore} from "vuex";
 import vueDanmaku from 'vue3-danmaku'
 
 
-const danmus = ref(['danmu1', 'danmu2', 'danmu3', '...'])
+// const danmus = ref(['danmu1', 'danmu2', 'danmu3', '...'])
+const img_path = new URL("@/assets/imgs/bg.jpg", import.meta.url).href.toString();
+
 
 const comment = defineAsyncComponent(() => import( "./comment/comment.vue"));
 const myFooter = defineAsyncComponent(() => import( "./common/myFooter.vue"));
@@ -61,45 +76,51 @@ const store = useStore();
 const show = ref(false)
 const messageContent = ref("")
 // background: {"background": "url(" + store.state.webInfo.backgroundImage + ") center center / cover no-repeat"},
-// const barrageList = ref([])
+const danmusList = ref([])
 
 const globalProperties = getCurrentInstance().appContext.config.globalProperties;
 const constant = globalProperties.$constant;
 const http = globalProperties.$http;
 const common = globalProperties.$common;
 
+const autoplay = ref(true)
+const danmaku_speeds = ref(70)
 
 const danmaku_style = ref({
   color: 'red',
-  height: '200px',
+  height: '100vh',
   width: window.innerWidth
 })
+
+const danmakuRef = ref(null)
 
 
 
 onMounted(() => {
-  // getTreeHole();
+  getTreeHole();
 })
 
-// const getTreeHole = () => {
-//   http.get(constant.baseURL + "/webInfo/listTreeHole")
-//       .then((res) => {
-//         if (!common.isEmpty(res.data)) {
-//           res.data.forEach(m => {
-//             barrageList.value.push({
-//               id: m.id,
-//               avatar: m.avatar,
-//               msg: m.message,
-//               time: Math.floor(Math.random() * 5 + 10),
-//               type: MESSAGE_TYPE.NORMAL,
-//             });
-//           });
-//         }
-//       })
-//       .catch((error) => {
-//         ElMessage.error(error.message);
-//       });
-// }
+const getTreeHole = () => {
+  http.get(constant.baseURL + "/webInfo/listTreeHole")
+      .then((res) => {
+        console.log(res)
+        if (!common.isEmpty(res.data)) {
+          res.data.forEach(m => {
+            danmusList.value.push({
+              id: m.id,
+              avatar: img_path,
+              // avatar: m.avatar,
+              msg: m.message,
+              time: Math.floor(Math.random() * 5 + 10),
+              // type: MESSAGE_TYPE.NORMAL,
+            });
+          });
+        }
+      })
+      .catch((error) => {
+        ElMessage.error(error.message);
+      });
+}
 
 const submitMessage = () => {
   if (messageContent.value.trim() === "") {
@@ -115,21 +136,21 @@ const submitMessage = () => {
     treeHole.avatar = store.state.currentUser.avatar;
   }
 
-  //
-  // http.post(constant.baseURL + "/webInfo/saveTreeHole", treeHole)
-  //     .then((res) => {
-  //       if (!common.isEmpty(res.data)) {
-  //         barrageList.value.push({
-  //           id: res.data.id,
-  //           avatar: res.data.avatar,
-  //           msg: res.data.message,
-  //           time: Math.floor(Math.random() * 5 + 10)
-  //         });
-  //       }
-  //     })
-  //     .catch((error) => {
-  //       ElMessage.error(error.message)
-  //     });
+  http.post(constant.baseURL + "/webInfo/saveTreeHole", treeHole)
+      .then((res) => {
+        console.log(res)
+        if (!common.isEmpty(res.data)) {
+          danmusList.value.push({
+            id: res.data.id,
+            avatar: res.data.avatar,
+            msg: res.data.message,
+            time: Math.floor(Math.random() * 5 + 10)
+          });
+        }
+      })
+      .catch((error) => {
+        ElMessage.error(error.message)
+      });
 
   messageContent.value = "";
   show.value = false;
@@ -147,7 +168,7 @@ const submitMessage = () => {
   color: var(--white);
   animation: hideToShow 2.5s;
   width: 360px;
-  z-index: 10;
+  z-index: 100;
 }
 
 .message-title {

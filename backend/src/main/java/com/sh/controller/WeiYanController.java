@@ -71,6 +71,7 @@ public class WeiYanController {
     @PostMapping("/saveNews")
     @LoginCheck
     public PoetryResult saveNews(@RequestBody WeiYan weiYanVO) {
+        System.out.println(weiYanVO);
         if (!StringUtils.hasText(weiYanVO.getContent()) || weiYanVO.getSource() == null) {
             return PoetryResult.fail("信息不全！");
         }

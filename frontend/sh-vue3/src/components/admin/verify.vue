@@ -6,17 +6,17 @@
       </div>
       <div>
         <el-input v-model="account">
-          <template slot="prepend">账号</template>
+          <template v-slot:prepend>账号</template>
         </el-input>
       </div>
       <div>
         <el-input v-model="password" type="password">
-          <template slot="prepend">密码</template>
+          <template v-slot:prepend>密码</template>
         </el-input>
       </div>
       <div>
         <proButton :info="'提交'"
-                   @click.native="login()"
+                   @click="login()"
                    :before="$constant.before_color_2"
                    :after="$constant.after_color_2">
         </proButton>
@@ -25,87 +25,91 @@
   </div>
 </template>
 
-<script>
-  const proButton = () => import( "../common/proButton");
+<script setup>
+import {defineAsyncComponent, getCurrentInstance, ref} from "vue";
+import {ElMessage} from "element-plus";
+import {useRoute, useRouter} from "vue-router";
+import {useStore} from "vuex";
 
-  export default {
-    components: {
-      proButton
-    },
-    data() {
-      return {
-        redirect: this.$route.query.redirect,
-        account: "",
-        password: ""
-      }
-    },
-    computed: {},
-    created() {
+const proButton = defineAsyncComponent(() => import( "../common/proButton.vue"));
 
-    },
-    methods: {
-      login() {
-        if (this.$common.isEmpty(this.account) || this.$common.isEmpty(this.password)) {
-          this.$message({
-            message: "请输入账号或密码！",
-            type: "error"
-          });
-          return;
-        }
+const router = useRouter();
+const route = useRoute();
+const store = useStore();
 
-        let user = {
-          account: this.account.trim(),
-          password: this.$common.encrypt(this.password.trim()),
-          isAdmin: true
-        };
 
-        this.$http.post(this.$constant.baseURL + "/user/login", user, true, false)
-          .then((res) => {
-            if (!this.$common.isEmpty(res.data)) {
-              localStorage.setItem("adminToken", res.data.accessToken);
-              this.$store.commit("loadCurrentAdmin", res.data);
-              this.account = "";
-              this.password = "";
-              this.$router.push({path: this.redirect});
-            }
-          })
-          .catch((error) => {
-            this.$message({
-              message: error.message,
-              type: "error"
-            });
-          });
-      }
-    }
+const globalProperties = getCurrentInstance().appContext.config.globalProperties;
+
+const common = globalProperties.$common
+const constant = globalProperties.$constant
+const http = globalProperties.$http
+
+// const redirect = ref(route.query.redirect)
+const account = ref("")
+const password = ref("")
+
+// console.log(route.query)
+
+const login = () => {
+  if (common.isEmpty(account.value) || common.isEmpty(password.value)) {
+    ElMessage({
+      message: "请输入账号或密码！",
+      type: "error"
+    })
+    return;
   }
+
+  let user = {
+    account: account.value.trim(),
+    password: common.encrypt(password.value.trim()),
+    isAdmin: true
+  };
+
+  http.post(constant.baseURL + "/user/login", user, true, false)
+      .then((res) => {
+        if (!common.isEmpty(res.data)) {
+          localStorage.setItem("adminToken", res.data.accessToken);
+          store.commit("loadCurrentAdmin", res.data);
+          account.value = "";
+          password.value = "";
+          router.push({path: "/admin"});
+        }
+      })
+      .catch((error) => {
+        ElMessage({
+          message: error.message,
+          type: "error"
+        })
+      });
+}
 </script>
 
 <style scoped>
 
-  .verify-container {
-    height: 100vh;
-    background: var(--backgroundPicture) center center / cover repeat;
-  }
+.verify-container {
+  height: 100vh;
+  background: var(--backgroundPicture) center center / cover repeat;
+}
 
-  .verify-content {
-    background: var(--maxWhiteMask);
-    padding: 30px 40px 5px;
-    position: relative;
-  }
+.verify-content {
+  background: var(--maxWhiteMask);
+  padding: 30px 40px 5px;
+  position: relative;
+}
 
-  .verify-content > div:first-child {
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%);
-    top: -25px;
-  }
+.verify-content > div:first-child {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%);
+  top: -25px;
+}
 
-  .verify-content > div:not(:first-child) {
-    margin: 25px 0;
-  }
+.verify-content > div:not(:first-child) {
+  margin: 25px 0;
+}
 
-  .verify-content > div:last-child > div {
-    margin: 0 auto;
-  }
+.verify-content > div:last-child > div {
+  margin: 0 auto;
+}
 
 </style>

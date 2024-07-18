@@ -4,7 +4,7 @@
     <div v-if="$common.isEmpty(currentUser)"
          class="myCenter in-up-container my-animation-hideToShow">
       <!-- 背景图片 -->
-<!--      :src="$store.state.webInfo.randomCover[Math.floor(Math.random() * $store.state.webInfo.randomCover.length)]"-->
+      <!--      :src="$store.state.webInfo.randomCover[Math.floor(Math.random() * $store.state.webInfo.randomCover.length)]"-->
       <el-image class="my-el-image"
                 style="position: absolute"
                 v-once
@@ -35,6 +35,14 @@
             <h1>登录</h1>
             <input v-model="account" type="text" placeholder="用户名/邮箱/手机号">
             <input v-model="password" type="password" placeholder="密码">
+            <div style="display: flex; align-items: center">
+              <label>
+                否<input v-model="isAdmin" type="radio" name="isAdmin" value="false">
+              </label>
+              <label>
+                是<input v-model="isAdmin" type="radio" name="isAdmin" value="true">
+              </label>
+            </div>
             <a href="#" @click="changeDialog('找回密码')">忘记密码？</a>
             <button @click="login()">登录</button>
           </div>
@@ -233,7 +241,7 @@ const store = useStore()
 const router = useRouter();
 
 const bg_href = new URL("@/assets/imgs/bg.jpg", import.meta.url).href;
-
+const isAdmin = ref(false)
 
 const currentUser = ref(store.state.currentUser)
 const username = ref("")
@@ -272,7 +280,8 @@ const login = () => {
 
   let user = {
     account: account.value.trim(),
-    password: common.encrypt(password.value.trim())
+    password: common.encrypt(password.value.trim()),
+    isAdmin: isAdmin.value
   };
   console.log(user)
   http.post(constant.baseURL + "/user/login", user, false, false)
@@ -345,7 +354,9 @@ const regist = () => {
           password.value = "";
           router.push({path: '/'});
           let userToken = common.encrypt(localStorage.getItem("userToken"));
-          window.open(constant.imBaseURL + "?userToken=" + userToken);
+          // window.open(constant.imBaseURL + "?userToken=" + userToken);
+          //跳回主页
+          router.push("/");
         }
       })
       .catch((error) => {

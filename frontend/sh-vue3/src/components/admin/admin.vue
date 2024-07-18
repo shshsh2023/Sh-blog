@@ -2,68 +2,59 @@
   <div>
     <myHeader></myHeader>
     <sidebar></sidebar>
-    <div class="content-box">
+    <div class="content-box" style="z-index: 10">
       <div class="content">
-        <router-view></router-view>
+        <router-view/>
       </div>
     </div>
   </div>
 </template>
 
-<script>
-  import myHeader from "./common/myHeader.vue";
-  import sidebar from "./common/sidebar.vue";
+<script setup>
+import myHeader from "./common/myHeader.vue";
+import sidebar from "./common/sidebar.vue";
+import {getCurrentInstance, onMounted} from "vue";
+import {useStore} from "vuex";
 
-  export default {
-    components: {
-      myHeader,
-      sidebar
-    },
+const globalProperties = getCurrentInstance().appContext.config.globalProperties;
 
-    data() {
-      return {}
-    },
+const common = globalProperties.$common
 
-    computed: {},
+const store = useStore()
 
-    watch: {},
 
-    created() {
-      let sysConfig = this.$store.state.sysConfig;
-      if (!this.$common.isEmpty(sysConfig) && !this.$common.isEmpty(sysConfig['webStaticResourcePrefix'])) {
-        let root = document.querySelector(":root");
-        let webStaticResourcePrefix = sysConfig['webStaticResourcePrefix'];
-        root.style.setProperty("--backgroundPicture", "url(" + webStaticResourcePrefix + "assets/backgroundPicture.jpg)");
-        const font = new FontFace("poetize-font", "url(" + webStaticResourcePrefix + "assets/font.woff2)");
-        font.load();
-        document.fonts.add(font);
-      }
-    },
+onMounted(() => {
+  let sysConfig = store.state.sysConfig;
+  if (!common.isEmpty(sysConfig) && !common.isEmpty(sysConfig['webStaticResourcePrefix'])) {
+    let root = document.querySelector(":root");
+    let webStaticResourcePrefix = sysConfig['webStaticResourcePrefix'];
+    root.style.setProperty("--backgroundPicture", "url(" + webStaticResourcePrefix + "assets/backgroundPicture.jpg)");
 
-    mounted() {
-
-    },
-
-    methods: {}
+    // const font_path = new URL("@/assets/webfont/font.ttf", import.meta.url).href.toString();
+    // const font = new FontFace("poetize-font", `url(${font_path})`);
+    // font.load();
+    // document.fonts.add(font);
   }
+})
+
 </script>
 
 <style scoped>
 
-  .content-box {
-    position: absolute;
-    left: 130px;
-    right: 0;
-    top: 70px;
-    bottom: 0;
-    transition: left .3s ease-in-out;
-  }
+.content-box {
+  position: absolute;
+  left: 130px;
+  right: 0;
+  top: 70px;
+  bottom: 0;
+  transition: left .3s ease-in-out;
+}
 
-  .content {
-    width: auto;
-    height: 100%;
-    padding: 30px;
-    overflow-y: scroll;
-  }
+.content {
+  width: auto;
+  height: 100%;
+  padding: 30px;
+  overflow-y: scroll;
+}
 
 </style>

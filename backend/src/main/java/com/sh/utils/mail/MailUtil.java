@@ -3,24 +3,16 @@ package com.sh.utils.mail;
 import com.alibaba.fastjson.JSON;
 import com.sh.constants.CommonConst;
 import jakarta.annotation.PostConstruct;
-import jakarta.annotation.Resource;
-import jakarta.mail.internet.MimeMessage;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.mail.MailProperties;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -54,8 +46,6 @@ public class MailUtil {
     public static final String imMail = "你收到来自 %s 的消息";
     public static final String notificationMail = "你收到来自 %s 的订阅";
 
-    @Autowired
-    private JavaMailSender mailSender;
 
     @Autowired
     private JavaMailSenderImpl javaMailSender;
@@ -63,8 +53,6 @@ public class MailUtil {
     @Autowired
     private Environment env;
 
-    @Value("${spring.mail.username}")
-    private String sender;
 
     /**
      * 1. 网站名称

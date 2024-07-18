@@ -26,12 +26,15 @@ public class LoginCheckAspect {
 
     @Around("@annotation(loginCheck)")
     public Object around(ProceedingJoinPoint joinPoint, LoginCheck loginCheck) throws Throwable {
+
         String token = PoetryUtil.getToken();
         if (!StringUtils.hasText(token)) {
             throw new PoetryLoginException(CodeMsg.NOT_LOGIN.getMsg());
         }
 
         User user = (User) PoetryCache.get(token);
+        log.info(String.valueOf(user));
+        log.info(String.valueOf(loginCheck.value()));
 
         if (user == null) {
             throw new PoetryLoginException(CodeMsg.LOGIN_EXPIRED.getMsg());
@@ -43,7 +46,8 @@ public class LoginCheckAspect {
             }
         } else if (token.contains(CommonConst.ADMIN_ACCESS_TOKEN)) {
             log.info("请求IP：" + PoetryUtil.getIpAddr(PoetryUtil.getRequest()));
-            if (loginCheck.value() == PoetryEnum.USER_TYPE_ADMIN.getCode() && user.getId().intValue() != CommonConst.ADMIN_USER_ID) {
+            //超级管理员才有权限
+            if (loginCheck.value() == PoetryEnum.USER_TYPE_ADMIN.getCode() && user.getUserType() != CommonConst.ADMIN_USER_ID) {
                 return PoetryResult.fail("请输入管理员账号！");
             }
         } else {

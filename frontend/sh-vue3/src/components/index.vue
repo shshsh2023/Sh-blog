@@ -15,7 +15,7 @@
                   class="background-image-index"
                   v-once
                   lazy
-                  :src="img"
+                  :src="img_href"
                   fit="cover">
           <template #error>
             <div class="image-slot background-image-index-error"></div>
@@ -188,6 +188,8 @@ const store = useStore()
 const router = useRouter();
 
 const img = 'https://img.zcool.cn/community/01585d55c2ef736ac7253f36abae49.jpg?imageMogr2/auto-orient/thumbnail/1280x%3e/sharpen/0.5/quality/100'
+
+const img_href = new URL("@/assets/imgs/bg.jpg", import.meta.url)
 
 const globalProperties = getCurrentInstance().appContext.config.globalProperties;
 
